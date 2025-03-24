@@ -1,10 +1,7 @@
 version: '3.8'
 
 networks:
-  openhands-network:
-    driver: bridge
-    # Not making it internal so the ports can be accessed
-  nginx-network:
+  default:
     driver: bridge
 
 services:
@@ -20,9 +17,6 @@ services:
     depends_on:
       openhands:
         condition: service_healthy
-    networks:
-      - nginx-network
-      - openhands-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "nginx", "-t"]
@@ -37,19 +31,16 @@ services:
 
   openhands:
     image: docker.all-hands.dev/all-hands-ai/openhands:0.29
+    ports:
+      - "3000:3000"
     environment:
       - SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.29-nikolaik
       - LOG_ALL_EVENTS=true
-      - RUNTIME=docker
-      - RUNTIME_INIT_TIMEOUT=60
-      - RUNTIME_DOCKER_NETWORK=openhands-network
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ~/.openhands-state:/.openhands-state
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    networks:
-      - openhands-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]

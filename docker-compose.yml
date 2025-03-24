@@ -39,6 +39,7 @@ services:
       - LOG_LEVEL=debug
       - RUNTIME_INIT_TIMEOUT=120
       - RUNTIME_MAX_CONCURRENT=2
+      - RUNTIME_HOST=172.17.0.1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ~/.openhands-state:/.openhands-state

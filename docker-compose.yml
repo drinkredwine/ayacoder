@@ -1,12 +1,9 @@
 version: '3.8'
 
-networks:
-  default:
-    driver: bridge
-
 services:
   nginx:
     image: nginx:alpine
+    container_name: ayacoder-nginx
     ports:
       - "80:80"
       - "443:443"
@@ -31,21 +28,17 @@ services:
 
   openhands:
     image: docker.all-hands.dev/all-hands-ai/openhands:0.29
-    ports:
-      - "3000:3000"
+    container_name: ayacoder-openhands
+    network_mode: "host"
     environment:
       - SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.29-nikolaik
       - LOG_ALL_EVENTS=true
       - LOG_LEVEL=debug
       - RUNTIME_INIT_TIMEOUT=120
       - RUNTIME_MAX_CONCURRENT=2
-      - RUNTIME_HOST=172.17.0.1
-      - RUNTIME_SERVER_HOST=172.17.0.1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ~/.openhands-state:/.openhands-state
-    extra_hosts:
-      - "host.docker.internal:172.17.0.1"
     restart: unless-stopped
     privileged: true
     healthcheck:

@@ -3,12 +3,6 @@
 # Exit on error
 set -e
 
-# Check if running as root
-if [ "$EUID" -ne 0 ]; then 
-    echo "Please run as root"
-    exit 1
-fi
-
 # Function to check if a command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
@@ -19,25 +13,30 @@ install_dependencies() {
     echo "Checking dependencies..."
     
     if ! command_exists docker; then
-        echo "Installing Docker..."
-        curl -fsSL https://get.docker.com -o get-docker.sh
-        sh get-docker.sh
-        rm get-docker.sh
+        echo "Error: Docker is not installed. Please install Docker and add your user to the docker group."
+        exit 1
     fi
     
     if ! command_exists docker-compose; then
-        echo "Installing Docker Compose..."
-        curl -L "https://github.com/docker/compose/releases/download/v2.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        chmod +x /usr/local/bin/docker-compose
+        echo "Error: Docker Compose is not installed. Please install Docker Compose."
+        exit 1
     fi
     
     if ! command_exists htpasswd; then
-        echo "Installing apache2-utils..."
-        if command_exists apt-get; then
-            apt-get update && apt-get install -y apache2-utils
-        elif command_exists yum; then
-            yum install -y httpd-tools
-        fi
+        echo "Error: apache2-utils is not installed. Please install it to use htpasswd."
+        echo "You can install it with:"
+        echo "  Ubuntu/Debian: sudo apt-get install apache2-utils"
+        echo "  CentOS/RHEL: sudo yum install httpd-tools"
+        exit 1
+    fi
+    
+    # Verify docker access
+    if ! docker ps > /dev/null 2>&1; then
+        echo "Error: Cannot access Docker. Make sure your user is in the docker group."
+        echo "You can add your user to the docker group with:"
+        echo "  sudo usermod -aG docker $USER"
+        echo "Then log out and log back in."
+        exit 1
     fi
 }
 
@@ -49,6 +48,10 @@ setup_ssl() {
         openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
             -keyout ssl/nginx.key -out ssl/nginx.crt \
             -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
+        
+        # Set appropriate permissions
+        chmod 600 ssl/nginx.key
+        chmod 644 ssl/nginx.crt
     fi
 }
 
@@ -59,6 +62,7 @@ setup_auth() {
         echo "Please enter username for authentication:"
         read username
         htpasswd -c htpasswd $username
+        chmod 600 htpasswd
     fi
 }
 
@@ -66,12 +70,15 @@ setup_auth() {
 deploy() {
     echo "Starting deployment..."
     
-    # Install dependencies
+    # Check dependencies
     install_dependencies
     
     # Setup SSL and auth
     setup_ssl
     setup_auth
+    
+    # Create OpenHands state directory if it doesn't exist
+    mkdir -p ~/.openhands-state
     
     # Stop existing containers
     echo "Stopping existing containers..."
@@ -88,6 +95,7 @@ deploy() {
     echo "Deployment complete!"
     echo "You can check the status with: docker-compose ps"
     echo "View logs with: docker-compose logs -f"
+    echo "Your service should be available at: https://$(hostname -f)"
 }
 
 # Run deployment

@@ -1,7 +1,10 @@
 version: '3.8'
 
 networks:
-  ayacoder_network:
+  openhands-network:
+    driver: bridge
+    # Not making it internal so the ports can be accessed
+  nginx-network:
     driver: bridge
 
 services:
@@ -18,7 +21,8 @@ services:
       openhands:
         condition: service_healthy
     networks:
-      - ayacoder_network
+      - nginx-network
+      - openhands-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "nginx", "-t"]
@@ -38,14 +42,14 @@ services:
       - LOG_ALL_EVENTS=true
       - RUNTIME=docker
       - RUNTIME_INIT_TIMEOUT=60
-      - RUNTIME_DOCKER_NETWORK=ayacoder_network
+      - RUNTIME_DOCKER_NETWORK=openhands-network
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ~/.openhands-state:/.openhands-state
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
-      - ayacoder_network
+      - openhands-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]

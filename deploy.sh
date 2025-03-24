@@ -62,7 +62,11 @@ setup_auth() {
         echo "Please enter username for authentication:"
         read username
         htpasswd -c htpasswd $username
-        chmod 600 htpasswd
+        # Set permissions that Nginx can read
+        chmod 644 htpasswd
+    else
+        # Ensure existing htpasswd has correct permissions
+        chmod 644 htpasswd
     fi
 }
 

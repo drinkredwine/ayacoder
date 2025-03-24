@@ -31,9 +31,6 @@ services:
         limits:
           cpus: '0.5'
           memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
 
   openhands:
     image: docker.all-hands.dev/all-hands-ai/openhands:0.29
@@ -57,7 +54,4 @@ services:
       resources:
         limits:
           cpus: '1'
-          memory: 1G
-        reservations:
-          cpus: '0.5'
-          memory: 512M 
+          memory: 1G 

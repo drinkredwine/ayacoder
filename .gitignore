@@ -1,5 +1,6 @@
 # SSL certificates
 ssl/
+OpenHands
 
 # Authentication files
 htpasswd

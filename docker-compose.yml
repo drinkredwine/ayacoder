@@ -3,7 +3,6 @@ version: '3.8'
 networks:
   ayacoder_network:
     driver: bridge
-    internal: true  # This network won't be accessible from outside
 
 services:
   nginx:

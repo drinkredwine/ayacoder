@@ -1,5 +1,10 @@
 version: '3.8'
 
+networks:
+  ayacoder_network:
+    driver: bridge
+    internal: true  # This network won't be accessible from outside
+
 services:
   nginx:
     image: nginx:alpine
@@ -11,7 +16,24 @@ services:
       - ./ssl:/etc/nginx/ssl:ro
       - ./htpasswd:/etc/nginx/.htpasswd:ro
     depends_on:
-      - openhands
+      openhands:
+        condition: service_healthy
+    networks:
+      - ayacoder_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   openhands:
     image: docker.all-hands.dev/all-hands-ai/openhands:0.29
@@ -23,5 +45,19 @@ services:
       - ~/.openhands-state:/.openhands-state
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    ports:
-      - "127.0.0.1:3000:3000"  # Only bind to localhost 
+    networks:
+      - ayacoder_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M 

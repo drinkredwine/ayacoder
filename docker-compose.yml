@@ -34,6 +34,10 @@ services:
       - LOG_LEVEL=debug
       - RUNTIME_INIT_TIMEOUT=120
       - RUNTIME_MAX_CONCURRENT=2
+      - HOST_DOCKER_INTERNAL=172.20.0.1
+      - RUNTIME_DOCKER_NETWORK=ayacoder
+      - RUNTIME_DOCKER_HOST=unix:///var/run/docker.sock
+      - RUNTIME_SERVER_HOST=172.20.0.1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ~/.openhands-state:/.openhands-state
@@ -48,7 +52,7 @@ services:
       timeout: 10s
       retries: 3
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "host.docker.internal:172.20.0.1"
 
 networks:
   ayacoder:
